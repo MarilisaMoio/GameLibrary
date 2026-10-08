@@ -32,3 +32,4 @@ A simple console application to manage a personal video game collection, written
 - [ ] Add the enum for genres
 - [ ] Add the possibility to see the games filtered by platform, genre and type
 - [ ] Save the collection to a JSON file and use it on startup
+- [ ] Add the possibility to exit from an action 
