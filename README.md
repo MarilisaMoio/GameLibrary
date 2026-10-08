@@ -27,7 +27,7 @@ A simple console application to manage a personal video game collection, written
 ## What I want to achieve next
 
 - [x] Refactor the code to achieve better readability
-- [ ] Edit a game
+- [x] Edit a game
 - [ ] Add the price for a single game and implement a method to retrieve the total for the collection
 - [ ] Add the enum for genres
 - [ ] Add the possibility to see the games filtered by platform, genre and type

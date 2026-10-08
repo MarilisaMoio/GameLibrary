@@ -5,6 +5,8 @@ public abstract class Game
     public string Name { get; set; }
     public string Genre { get; set; }
 
+    private const string DefaultName = "Unknown";
+
     protected Game(string name, string genre)
     {
         Name = name;

@@ -1,4 +1,6 @@
 ﻿using GameLibrary.Games;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 
 List<Game> games = new List<Game>();
 string? userInput;
@@ -9,6 +11,7 @@ do
 {
     Console.WriteLine("[S]ee all games");
     Console.WriteLine("[A]dd game");
+    Console.WriteLine("[M]odify game");
     Console.WriteLine("[R]emove game");
     Console.WriteLine("[E]xit");
 
@@ -21,6 +24,9 @@ do
             break;
         case "A":
             AddNewGame();
+            break;
+        case "M":
+            ModifyGame();
             break;
         case "R":
             RemoveGame();
@@ -43,7 +49,7 @@ void ShowAllGames()
     }
     else
     {
-        PrintGameList(games);
+        PrintGameListExtended(games);
     }
 }
 
@@ -82,9 +88,6 @@ void AddNewGame()
 
 void RemoveGame()
 {
-    string? userChoice;
-    bool isIndexPresent;
-
     if (games.Count == 0)
     {
         MessageEmpty();
@@ -93,24 +96,64 @@ void RemoveGame()
     {
         Console.WriteLine("Select the index of the game to remove:");
         PrintGameList(games);
-        do
-        {
-            userChoice = Console.ReadLine();
-            bool isValidInput = int.TryParse(userChoice, out int value);
-            int index = value - 1;
-            isIndexPresent = (index >= 0) && (games.Count > index);
-            if (!isValidInput || !isIndexPresent)
-            {
-                MessageInvalidInput();
-            } else
-            {
-                games.RemoveAt(index);
-                MessageSuccess("removed");
-            }
-        } while (string.IsNullOrWhiteSpace(userChoice) || !int.TryParse(userChoice, out int result) || !isIndexPresent);  
+
+        int indexToRemove = AskForIndexInput(games.Count);
+
+        games.RemoveAt(indexToRemove);
+        MessageSuccess("removed");
     }
 }
 
+void ModifyGame()
+{
+    if (games.Count == 0)
+    {
+        MessageEmpty();
+    }
+    else
+    {
+        Console.WriteLine("Select the index of the game to modify:");
+        PrintGameList(games);
+
+        int indexToModify = AskForIndexInput(games.Count);
+
+        Game gameToModify = games[indexToModify];
+
+        List<PropertyInfo> settableProperties = gameToModify.GetType()
+            .GetProperties()
+            .Where(p => p.SetMethod is { IsPublic: true }
+                && !p.SetMethod.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(IsExternalInit)))
+            .OrderBy(p => p.DeclaringType != typeof(Game))
+            .ThenBy(p => p.Name != nameof(Game.Name))
+            .ToList();
+
+        System.Console.WriteLine("Enter the index of the property you want to modify:");
+
+        int totalProperties = settableProperties.Count;
+        for (int i = 0; i < totalProperties; i++)
+        {
+            System.Console.WriteLine($"{i + 1}. {settableProperties[i].Name} (current: {settableProperties[i].GetValue(gameToModify)})");
+        }
+
+        int propertyIndex = AskForIndexInput(totalProperties);
+
+        PropertyInfo propertyToModify = settableProperties[propertyIndex];
+        Type propertyType = propertyToModify.PropertyType;
+        string prompt = $"Enter the new value for {propertyToModify.Name}:";
+
+        // Map the runtime type to a compile-time type to call the generic method
+        object newValue = propertyType switch
+        {
+            _ when propertyType == typeof(Condition) => AskForEnumInput<Condition>(prompt),
+            _ when propertyType == typeof(Platform) => AskForEnumInput<Platform>(prompt),
+            _ when propertyType == typeof(PegiRating) => AskForEnumInput<PegiRating>(prompt),
+            _ => AskForTextInput(prompt)
+        };
+
+        propertyToModify.SetValue(gameToModify, newValue);
+        MessageSuccess("modified");
+    }
+}
 void MessageEmpty()
 {
     System.Console.WriteLine("No games available");
@@ -137,7 +180,7 @@ void PrintOptions<T>() where T : struct, Enum
     }
 }
 
-void PrintGameList(List<Game> games)
+void PrintGameListExtended(List<Game> games)
 {
     for (int i = 0; i < games.Count; i++)
     {
@@ -145,6 +188,16 @@ void PrintGameList(List<Game> games)
     }
     System.Console.WriteLine();
 }
+
+void PrintGameList(List<Game> games)
+{
+    for (int i = 0; i < games.Count; i++)
+    {
+        System.Console.WriteLine($"{i + 1}. {games[i].Name}");
+    }
+    System.Console.WriteLine();
+}
+
 
 string AskForTextInput(string prompt)
 {
@@ -179,4 +232,25 @@ T AskForEnumInput<T>(string prompt) where T : struct, Enum
     } while (!isValidInput);
 
     return value;
+}
+
+int AskForIndexInput(int maxIndex)
+{
+    string? userChoice;
+    bool isIndexPresent;
+    int index;
+
+    do
+    {
+        userChoice = Console.ReadLine();
+        bool isValidInput = int.TryParse(userChoice, out int value);
+        index = value - 1;
+        isIndexPresent = (index >= 0) && (maxIndex > index);
+        if (!isValidInput || !isIndexPresent)
+        {
+            MessageInvalidInput();
+        }
+    } while (string.IsNullOrWhiteSpace(userChoice) || !int.TryParse(userChoice, out int result) || !isIndexPresent); 
+
+    return index;
 }

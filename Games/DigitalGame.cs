@@ -2,8 +2,8 @@ namespace GameLibrary.Games;
 
 public class DigitalGame : Game
 {
-    public Platform Platform { get; init; }
-    public PegiRating Pegi { get; init; }
+    public Platform Platform { get; set; }
+    public PegiRating Pegi { get; set; }
 
     public DigitalGame(string name, string genre, PegiRating pegi, Platform platform) : base(name, genre)
     {
