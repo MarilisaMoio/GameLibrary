@@ -5,7 +5,7 @@ public class DigitalGame : Game
     public Platform Platform { get; set; }
     public PegiRating Pegi { get; set; }
 
-    public DigitalGame(string name, string genre, PegiRating pegi, Platform platform) : base(name, genre)
+    public DigitalGame(string name, string genre, decimal price, PegiRating pegi, Platform platform) : base(name, genre, price)
     {
         if (!Enum.IsDefined(pegi))
             throw new ArgumentOutOfRangeException(nameof(pegi));

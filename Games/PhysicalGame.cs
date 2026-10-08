@@ -8,7 +8,7 @@ public class PhysicalGame : Game
         set => field = Enum.IsDefined(value) ? value : throw new ArgumentOutOfRangeException(nameof(value));
     }
 
-    public PhysicalGame(string name, string genre, Condition condition) : base(name, genre)
+    public PhysicalGame(string name, string genre, decimal price, Condition condition) : base(name, genre, price)
     {
         Condition = condition;
     }

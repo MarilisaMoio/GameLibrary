@@ -1,6 +1,10 @@
 ﻿using GameLibrary.Games;
+using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+
+// fixing the encoding issue with the console output
+Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 List<Game> games = new List<Game>();
 string? userInput;
@@ -10,6 +14,7 @@ System.Console.WriteLine("Welcome to the Game Library!");
 do
 {
     Console.WriteLine("[S]ee all games");
+    Console.WriteLine("[T]otal value of games");
     Console.WriteLine("[A]dd game");
     Console.WriteLine("[M]odify game");
     Console.WriteLine("[R]emove game");
@@ -21,6 +26,9 @@ do
     {
         case "S":
             ShowAllGames();
+            break;
+        case "T":
+            ShowTotalValue();
             break;
         case "A":
             AddNewGame();
@@ -40,6 +48,13 @@ do
             break;
     }
 } while (!string.Equals(userInput, "E", StringComparison.OrdinalIgnoreCase));
+
+void ShowTotalValue()
+{
+    decimal totalValue = games.Sum(game => game.Price);
+    System.Console.WriteLine($"Total value of games: {totalValue:C}");
+    System.Console.WriteLine();
+}
 
 void ShowAllGames()
 {
@@ -64,6 +79,9 @@ void AddNewGame()
     // Ask for game genre until a valid input is provided
     string userGameGenre = AskForTextInput("Insert the genre of the game:");
 
+    // Ask for game price until a valid input is provided
+    decimal userGamePrice = AskForDecimalInput("Insert the price of the game:");
+
     //choose game type and ask for additional information based on the type
     if (gameType == GameType.Digital)
     {
@@ -73,7 +91,7 @@ void AddNewGame()
         // Ask for game platform until a valid input is provided
         Platform platform = AskForEnumInput<Platform>("Insert the platform of the game:");
 
-        games.Add(new DigitalGame(userGameName, userGameGenre, pegi, platform));
+        games.Add(new DigitalGame(userGameName, userGameGenre, userGamePrice, pegi, platform));
         MessageSuccess("added");
     }
     else if (gameType == GameType.Physical)
@@ -81,7 +99,7 @@ void AddNewGame()
         // Ask for game condition until a valid input is provided
         Condition condition = AskForEnumInput<Condition>("Insert the condition of the game:");
 
-        games.Add(new PhysicalGame(userGameName, userGameGenre, condition));
+        games.Add(new PhysicalGame(userGameName, userGameGenre, userGamePrice, condition));
         MessageSuccess("added");
     }
 }
@@ -147,6 +165,7 @@ void ModifyGame()
             _ when propertyType == typeof(Condition) => AskForEnumInput<Condition>(prompt),
             _ when propertyType == typeof(Platform) => AskForEnumInput<Platform>(prompt),
             _ when propertyType == typeof(PegiRating) => AskForEnumInput<PegiRating>(prompt),
+            _ when propertyType == typeof(decimal) => AskForDecimalInput(prompt),
             _ => AskForTextInput(prompt)
         };
 
@@ -198,7 +217,6 @@ void PrintGameList(List<Game> games)
     System.Console.WriteLine();
 }
 
-
 string AskForTextInput(string prompt)
 {
     string? input;
@@ -224,6 +242,27 @@ T AskForEnumInput<T>(string prompt) where T : struct, Enum
         Console.WriteLine(prompt);
         PrintOptions<T>();
         isValidInput = Enum.TryParse(Console.ReadLine(), true, out value) && Enum.IsDefined(value);
+
+        if (!isValidInput)
+        {
+            MessageInvalidInput();
+        }
+    } while (!isValidInput);
+
+    return value;
+}
+
+decimal AskForDecimalInput(string prompt)
+{
+    decimal value;
+    bool isValidInput;
+    do
+    {
+        Console.WriteLine(prompt);
+        // Accept both ',' and '.' as decimal separator, regardless of the system culture
+        string input = (Console.ReadLine() ?? "").Replace(',', '.');
+        isValidInput = decimal.TryParse(input, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out value)
+            && value >= 0;
 
         if (!isValidInput)
         {
