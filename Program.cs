@@ -3,6 +3,8 @@
 List<Game> games = new List<Game>();
 string? userInput;
 
+System.Console.WriteLine("Welcome to the Game Library!");
+
 do
 {
     Console.WriteLine("[S]ee all games");
@@ -24,6 +26,7 @@ do
             RemoveGame();
             break;
         case "E":
+            System.Console.WriteLine("Bye!");
             break;
         default:
             System.Console.WriteLine("Select an option from the menu");
