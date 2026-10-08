@@ -26,7 +26,7 @@ A simple console application to manage a personal video game collection, written
 
 ## What I want to achieve next
 
-- [ ] Refactor the code to achieve better readability
+- [x] Refactor the code to achieve better readability
 - [ ] Edit a game
 - [ ] Add the price for a single game and implement a method to retrieve the total for the collection
 - [ ] Add the enum for genres
