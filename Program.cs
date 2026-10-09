@@ -1,9 +1,9 @@
 ﻿using GameLibrary.Games;
-using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using GameLibrary.Utility;
 
 // fixing the encoding issue with the console output
 Console.OutputEncoding = System.Text.Encoding.UTF8;
@@ -31,7 +31,7 @@ do
     Console.WriteLine("[R]emove game");
     Console.WriteLine("[E]xit");
 
-    userInput = ReadInput();
+    userInput = Prompter.ReadInput();
     
     switch (userInput.ToUpper())
     {
@@ -71,49 +71,49 @@ void ShowAllGames()
 {
     if (games.Count == 0)
     {
-        MessageEmpty();
+        Printer.MessageEmpty();
     }
     else
     {
-        PrintGameListExtended(games);
+        Printer.PrintGameListExtended(games);
     }
 }
 
 void AddNewGame()
 {
     // Ask for game type until a valid input is provided
-    GameType gameType = AskForEnumInput<GameType>("Insert the type of game:");
+    GameType gameType = Prompter.AskForEnumInput<GameType>("Insert the type of game:");
 
     // Ask for game name until a valid input is provided
-    string userGameName = AskForTextInput("Insert the name of the game:");
+    string userGameName = Prompter.AskForTextInput("Insert the name of the game:");
 
     // Ask for game genre until a valid input is provided
-    string userGameGenre = AskForTextInput("Insert the genre of the game:");
+    string userGameGenre = Prompter.AskForTextInput("Insert the genre of the game:");
 
     // Ask for game price until a valid input is provided
-    decimal userGamePrice = AskForDecimalInput("Insert the price of the game:");
+    decimal userGamePrice = Prompter.AskForDecimalInput("Insert the price of the game:");
 
     //choose game type and ask for additional information based on the type
     if (gameType == GameType.Digital)
     {
         // Ask for game pegi until a valid input is provided
-        PegiRating pegi = AskForEnumInput<PegiRating>("Insert the PEGI of the game:");
+        PegiRating pegi = Prompter.AskForEnumInput<PegiRating>("Insert the PEGI of the game:");
 
         // Ask for game platform until a valid input is provided
-        Platform platform = AskForEnumInput<Platform>("Insert the platform of the game:");
+        Platform platform = Prompter.AskForEnumInput<Platform>("Insert the platform of the game:");
 
         games.Add(new DigitalGame(userGameName, userGameGenre, userGamePrice, pegi, platform));
     }
     else if (gameType == GameType.Physical)
     {
         // Ask for game condition until a valid input is provided
-        Condition condition = AskForEnumInput<Condition>("Insert the condition of the game:");
+        Condition condition = Prompter.AskForEnumInput<Condition>("Insert the condition of the game:");
 
         games.Add(new PhysicalGame(userGameName, userGameGenre, userGamePrice, condition));
     }
 
     SaveGames();
-    MessageSuccess("added");
+    Printer.MessageSuccess("added");
 }
 
 void SaveGames()
@@ -126,18 +126,18 @@ void RemoveGame()
 {
     if (games.Count == 0)
     {
-        MessageEmpty();
+        Printer.MessageEmpty();
     }
     else
     {
         Console.WriteLine("Select the index of the game to remove:");
-        PrintGameList(games);
+        Printer.PrintGameList(games);
 
-        int indexToRemove = AskForIndexInput(games.Count);
+        int indexToRemove = Prompter.AskForIndexInput(games.Count);
 
         games.RemoveAt(indexToRemove);
         SaveGames();
-        MessageSuccess("removed");
+        Printer.MessageSuccess("removed");
     }
 }
 
@@ -145,14 +145,14 @@ void ModifyGame()
 {
     if (games.Count == 0)
     {
-        MessageEmpty();
+        Printer.MessageEmpty();
     }
     else
     {
         Console.WriteLine("Select the index of the game to modify:");
-        PrintGameList(games);
+        Printer.PrintGameList(games);
 
-        int indexToModify = AskForIndexInput(games.Count);
+        int indexToModify = Prompter.AskForIndexInput(games.Count);
 
         Game gameToModify = games[indexToModify];
 
@@ -172,7 +172,7 @@ void ModifyGame()
             System.Console.WriteLine($"{i + 1}. {settableProperties[i].Name} (current: {settableProperties[i].GetValue(gameToModify)})");
         }
 
-        int propertyIndex = AskForIndexInput(totalProperties);
+        int propertyIndex = Prompter.AskForIndexInput(totalProperties);
 
         PropertyInfo propertyToModify = settableProperties[propertyIndex];
         Type propertyType = propertyToModify.PropertyType;
@@ -181,151 +181,17 @@ void ModifyGame()
         // Map the runtime type to a compile-time type to call the generic method
         object newValue = propertyType switch
         {
-            _ when propertyType == typeof(Condition) => AskForEnumInput<Condition>(prompt),
-            _ when propertyType == typeof(Platform) => AskForEnumInput<Platform>(prompt),
-            _ when propertyType == typeof(PegiRating) => AskForEnumInput<PegiRating>(prompt),
-            _ when propertyType == typeof(decimal) => AskForDecimalInput(prompt),
-            _ => AskForTextInput(prompt)
+            _ when propertyType == typeof(Condition) => Prompter.AskForEnumInput<Condition>(prompt),
+            _ when propertyType == typeof(Platform) => Prompter.AskForEnumInput<Platform>(prompt),
+            _ when propertyType == typeof(PegiRating) => Prompter.AskForEnumInput<PegiRating>(prompt),
+            _ when propertyType == typeof(decimal) => Prompter.AskForDecimalInput(prompt),
+            _ => Prompter.AskForTextInput(prompt)
         };
 
         propertyToModify.SetValue(gameToModify, newValue);
         SaveGames();
-        MessageSuccess("modified");
+        Printer.MessageSuccess("modified");
     }
-}
-void MessageEmpty()
-{
-    System.Console.WriteLine("No games available");
-    System.Console.WriteLine();
-}
-
-void MessageInvalidInput()
-{
-    System.Console.WriteLine("Invalid input, please try again");
-    System.Console.WriteLine();
-}
-
-void MessageSuccess(string action)
-{
-    System.Console.WriteLine($"Game {action} successfully!");
-    System.Console.WriteLine();
-}
-
-void PrintOptions<T>() where T : struct, Enum
-{
-    foreach (T option in Enum.GetValues<T>())
-    {
-        System.Console.WriteLine($"{Convert.ToInt32(option)}. {option}");
-    }
-}
-
-void PrintGameListExtended(List<Game> games)
-{
-    for (int i = 0; i < games.Count; i++)
-    {
-        System.Console.WriteLine($"{i + 1}. {games[i].Describe()}");
-    }
-    System.Console.WriteLine();
-}
-
-void PrintGameList(List<Game> games)
-{
-    for (int i = 0; i < games.Count; i++)
-    {
-        System.Console.WriteLine($"{i + 1}. {games[i].Name}");
-    }
-    System.Console.WriteLine();
-}
-
-string ReadInput()
-{
-    // ReadLine returns null when the input stream is closed (e.g. Ctrl+Z on Windows):
-    // no more input will ever arrive, so asking again would loop forever
-    string? input = Console.ReadLine();
-    if (input is null)
-    {
-        System.Console.WriteLine("Bye!");
-        Environment.Exit(0);
-    }
-
-    return input;
-}
-
-string AskForTextInput(string prompt)
-{
-    string input;
-    do
-    {
-        Console.WriteLine(prompt);
-        input = ReadInput();
-        if (string.IsNullOrWhiteSpace(input))
-        {
-            MessageInvalidInput();
-        }
-    } while (string.IsNullOrWhiteSpace(input));
-
-    return input;
-}
-
-T AskForEnumInput<T>(string prompt) where T : struct, Enum
-{
-    T value;
-    bool isValidInput;
-    do
-    {
-        Console.WriteLine(prompt);
-        PrintOptions<T>();
-        isValidInput = Enum.TryParse(ReadInput(), true, out value) && Enum.IsDefined(value);
-
-        if (!isValidInput)
-        {
-            MessageInvalidInput();
-        }
-    } while (!isValidInput);
-
-    return value;
-}
-
-decimal AskForDecimalInput(string prompt)
-{
-    decimal value;
-    bool isValidInput;
-    do
-    {
-        Console.WriteLine(prompt);
-        // Accept both ',' and '.' as decimal separator, regardless of the system culture
-        string input = ReadInput().Replace(',', '.');
-        isValidInput = decimal.TryParse(input, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out value)
-            && value >= 0;
-
-        if (!isValidInput)
-        {
-            MessageInvalidInput();
-        }
-    } while (!isValidInput);
-
-    return value;
-}
-
-int AskForIndexInput(int maxIndex)
-{
-    string userChoice;
-    bool isIndexPresent;
-    int index;
-
-    do
-    {
-        userChoice = ReadInput();
-        bool isValidInput = int.TryParse(userChoice, out int value);
-        index = value - 1;
-        isIndexPresent = (index >= 0) && (maxIndex > index);
-        if (!isValidInput || !isIndexPresent)
-        {
-            MessageInvalidInput();
-        }
-    } while (string.IsNullOrWhiteSpace(userChoice) || !int.TryParse(userChoice, out int result) || !isIndexPresent); 
-
-    return index;
 }
 
 void LoadGames()
