@@ -1,5 +1,10 @@
+using System.Text.Json.Serialization;
+
 namespace GameLibrary.Games;
 
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+[JsonDerivedType(typeof(DigitalGame), "digital")]
+[JsonDerivedType(typeof(PhysicalGame), "physical")]
 public abstract class Game
 {
     public string Name { get; set; }

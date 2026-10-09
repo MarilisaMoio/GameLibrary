@@ -2,6 +2,8 @@
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 // fixing the encoding issue with the console output
 Console.OutputEncoding = System.Text.Encoding.UTF8;
@@ -9,7 +11,16 @@ Console.OutputEncoding = System.Text.Encoding.UTF8;
 List<Game> games = new List<Game>();
 string? userInput;
 
+string filePath = Path.Combine(AppContext.BaseDirectory, "games.json");
+JsonSerializerOptions jsonOptions = new()
+{
+    WriteIndented = true,
+    Converters = { new JsonStringEnumConverter() }
+};
+
 System.Console.WriteLine("Welcome to the Game Library!");
+
+LoadGames();
 
 do
 {
@@ -92,7 +103,6 @@ void AddNewGame()
         Platform platform = AskForEnumInput<Platform>("Insert the platform of the game:");
 
         games.Add(new DigitalGame(userGameName, userGameGenre, userGamePrice, pegi, platform));
-        MessageSuccess("added");
     }
     else if (gameType == GameType.Physical)
     {
@@ -100,8 +110,16 @@ void AddNewGame()
         Condition condition = AskForEnumInput<Condition>("Insert the condition of the game:");
 
         games.Add(new PhysicalGame(userGameName, userGameGenre, userGamePrice, condition));
-        MessageSuccess("added");
     }
+
+    SaveGames();
+    MessageSuccess("added");
+}
+
+void SaveGames()
+{
+    string json = JsonSerializer.Serialize(games, jsonOptions);
+    File.WriteAllText(filePath, json);
 }
 
 void RemoveGame()
@@ -118,6 +136,7 @@ void RemoveGame()
         int indexToRemove = AskForIndexInput(games.Count);
 
         games.RemoveAt(indexToRemove);
+        SaveGames();
         MessageSuccess("removed");
     }
 }
@@ -170,6 +189,7 @@ void ModifyGame()
         };
 
         propertyToModify.SetValue(gameToModify, newValue);
+        SaveGames();
         MessageSuccess("modified");
     }
 }
@@ -292,4 +312,26 @@ int AskForIndexInput(int maxIndex)
     } while (string.IsNullOrWhiteSpace(userChoice) || !int.TryParse(userChoice, out int result) || !isIndexPresent); 
 
     return index;
+}
+
+void LoadGames()
+{
+    if (File.Exists(filePath))
+    {
+        try
+        {
+            string json = File.ReadAllText(filePath);
+            games = JsonSerializer.Deserialize<List<Game>>(json, jsonOptions) ?? new List<Game>();
+        }
+        catch (JsonException)
+        {
+            System.Console.WriteLine("Error: The games.json file is corrupted. Starting with an empty game list.");
+            games = new List<Game>();
+        }
+        catch (Exception ex)
+        {
+            System.Console.WriteLine($"Error loading games: {ex.Message}");
+            games = new List<Game>();
+        }   
+    }
 }
