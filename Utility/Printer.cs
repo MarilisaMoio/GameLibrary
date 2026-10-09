@@ -47,4 +47,14 @@ public static class Printer
         System.Console.WriteLine($"Game {action} successfully!");
         System.Console.WriteLine();
     }
+
+    public static void PrintMenu()
+    {
+        System.Console.WriteLine("[S]ee all games");
+        System.Console.WriteLine("[T]otal value of games");
+        System.Console.WriteLine("[A]dd game");
+        System.Console.WriteLine("[M]odify game");
+        System.Console.WriteLine("[R]emove game");
+        System.Console.WriteLine("[E]xit");
+    }
 }

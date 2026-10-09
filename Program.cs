@@ -24,12 +24,7 @@ LoadGames();
 
 do
 {
-    Console.WriteLine("[S]ee all games");
-    Console.WriteLine("[T]otal value of games");
-    Console.WriteLine("[A]dd game");
-    Console.WriteLine("[M]odify game");
-    Console.WriteLine("[R]emove game");
-    Console.WriteLine("[E]xit");
+    Printer.PrintMenu();
 
     userInput = Prompter.ReadInput();
     
