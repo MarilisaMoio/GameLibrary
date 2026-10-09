@@ -9,7 +9,7 @@ using System.Text.Json.Serialization;
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 List<Game> games = new List<Game>();
-string? userInput;
+string userInput;
 
 string filePath = Path.Combine(AppContext.BaseDirectory, "games.json");
 JsonSerializerOptions jsonOptions = new()
@@ -31,9 +31,9 @@ do
     Console.WriteLine("[R]emove game");
     Console.WriteLine("[E]xit");
 
-    userInput = Console.ReadLine();
+    userInput = ReadInput();
     
-    switch (userInput?.ToUpper())
+    switch (userInput.ToUpper())
     {
         case "S":
             ShowAllGames();
@@ -237,13 +237,27 @@ void PrintGameList(List<Game> games)
     System.Console.WriteLine();
 }
 
+string ReadInput()
+{
+    // ReadLine returns null when the input stream is closed (e.g. Ctrl+Z on Windows):
+    // no more input will ever arrive, so asking again would loop forever
+    string? input = Console.ReadLine();
+    if (input is null)
+    {
+        System.Console.WriteLine("Bye!");
+        Environment.Exit(0);
+    }
+
+    return input;
+}
+
 string AskForTextInput(string prompt)
 {
-    string? input;
+    string input;
     do
     {
         Console.WriteLine(prompt);
-        input = Console.ReadLine();
+        input = ReadInput();
         if (string.IsNullOrWhiteSpace(input))
         {
             MessageInvalidInput();
@@ -261,7 +275,7 @@ T AskForEnumInput<T>(string prompt) where T : struct, Enum
     {
         Console.WriteLine(prompt);
         PrintOptions<T>();
-        isValidInput = Enum.TryParse(Console.ReadLine(), true, out value) && Enum.IsDefined(value);
+        isValidInput = Enum.TryParse(ReadInput(), true, out value) && Enum.IsDefined(value);
 
         if (!isValidInput)
         {
@@ -280,7 +294,7 @@ decimal AskForDecimalInput(string prompt)
     {
         Console.WriteLine(prompt);
         // Accept both ',' and '.' as decimal separator, regardless of the system culture
-        string input = (Console.ReadLine() ?? "").Replace(',', '.');
+        string input = ReadInput().Replace(',', '.');
         isValidInput = decimal.TryParse(input, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out value)
             && value >= 0;
 
@@ -295,13 +309,13 @@ decimal AskForDecimalInput(string prompt)
 
 int AskForIndexInput(int maxIndex)
 {
-    string? userChoice;
+    string userChoice;
     bool isIndexPresent;
     int index;
 
     do
     {
-        userChoice = Console.ReadLine();
+        userChoice = ReadInput();
         bool isValidInput = int.TryParse(userChoice, out int value);
         index = value - 1;
         isIndexPresent = (index >= 0) && (maxIndex > index);
